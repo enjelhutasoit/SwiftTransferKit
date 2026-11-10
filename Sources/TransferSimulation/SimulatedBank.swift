@@ -49,26 +49,9 @@ public actor SimulatedBank: TransferGateway, TransferStatusGateway {
         for intentID: UUID,
         idempotencyKey: UUID
     ) async throws -> TransferStatusResponse {
-        let transfer = await store.acceptedTransfer(
-            for: idempotencyKey
-        )
-
-        guard let transfer else {
-            return TransferStatusResponse(
-                intentID: intentID,
-                idempotencyKey: idempotencyKey,
-                status: .notFound
-            )
-        }
-
-        guard transfer.intent.id == intentID else {
-            throw SimulatedBankError.intentConflict
-        }
-
-        return TransferStatusResponse(
-            intentID: transfer.intent.id,
-            idempotencyKey: transfer.idempotencyKey,
-            status: .accepted
+        try await store.status(
+            for: intentID,
+            idempotencyKey: idempotencyKey
         )
     }
 }

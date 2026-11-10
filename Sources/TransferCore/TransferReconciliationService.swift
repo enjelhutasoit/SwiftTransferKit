@@ -5,20 +5,27 @@
 import Foundation
 import TransferDomain
 
-/// Queries status for an existing journaled intent without submitting it.
+/// Queries status without submitting transfers.
 ///
-/// Returns an observation; it does not mutate the journal or coordinator.
-/// Status ordering across separate calls is handled by a later layer.
-public struct TransferReconciliationService: Sendable {
+/// Retain one instance to preserve ordering knowledge across calls.
+/// Snapshots are process-local and do not mutate the durable journal.
+public actor TransferReconciliationService {
     public enum Failure: Error, Equatable, Sendable {
         case intentNotFound
         case persistenceFailure
+    }
+
+    private struct CachedStatus {
+        let idempotencyKey: UUID
+        let snapshot: TransferStatusSnapshot
     }
 
     private let journal: any TransferJournal
     private let gateway: any TransferStatusGateway
     private let policy: ReconciliationPolicy
     private let sleep: @Sendable (UInt64) async throws -> Void
+
+    private var latest: [UUID: CachedStatus] = [:]
 
     public init(
         journal: any TransferJournal,
@@ -32,6 +39,12 @@ public struct TransferReconciliationService: Sendable {
         self.gateway = gateway
         self.policy = policy
         self.sleep = sleep
+    }
+
+    public func latestStatus(
+        for intentID: UUID
+    ) -> TransferStatusSnapshot? {
+        latest[intentID]?.snapshot
     }
 
     public func reconcile(
@@ -82,7 +95,16 @@ public struct TransferReconciliationService: Sendable {
                response.intentID == entry.intent.id,
                response.idempotencyKey == entry.idempotencyKey,
                let state = try confirmedState(for: response.status) {
-                return .confirmed(state: state, attempts: attempt)
+                let incoming = TransferStatusSnapshot(
+                    state: state,
+                    version: response.version
+                )
+                let accepted = try apply(incoming, for: entry)
+
+                return .confirmed(
+                    state: accepted.state,
+                    attempts: attempt
+                )
             }
 
             guard attempt < policy.maximumAttempts else {
@@ -102,6 +124,31 @@ public struct TransferReconciliationService: Sendable {
         return .unresolved(attempts: policy.maximumAttempts)
     }
 
+    private func apply(
+        _ incoming: TransferStatusSnapshot,
+        for entry: JournaledTransfer
+    ) throws -> TransferStatusSnapshot {
+        let current = latest[entry.intent.id]
+
+        if let current,
+           current.idempotencyKey != entry.idempotencyKey {
+            throw Failure.persistenceFailure
+        }
+
+        // Read, validate, and write without a suspension point.
+        let merged = try TransferStateMachine.applying(
+            incoming,
+            to: current?.snapshot
+        )
+
+        latest[entry.intent.id] = CachedStatus(
+            idempotencyKey: entry.idempotencyKey,
+            snapshot: merged
+        )
+
+        return merged
+    }
+
     private func confirmedState(
         for status: TransferStatusResponse.Status
     ) throws -> TransferState? {
@@ -110,13 +157,10 @@ public struct TransferReconciliationService: Sendable {
         switch status {
         case .accepted:
             event = .serverAccepted
-
         case .settled:
             event = .serverSettled
-
         case .rejected:
             event = .serverRejected
-
         case .pending, .notFound:
             return nil
         }

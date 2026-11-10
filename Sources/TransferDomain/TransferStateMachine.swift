@@ -7,6 +7,12 @@ public enum TransferStateMachine {
         case invalidTransition(state: TransferState, event: TransferEvent)
     }
 
+    public enum StatusUpdateError: Error, Equatable, Sendable {
+        case nonAuthoritativeState
+        case missingVersion
+        case conflictingVersion(TransferStatusVersion)
+    }
+
     /// Evaluates a lifecycle event without mutating the caller's state.
     public static func transition(
         from state: TransferState,
@@ -46,5 +52,57 @@ public enum TransferStateMachine {
         default:
             throw TransitionError.invalidTransition(state: state, event: event)
         }
+    }
+
+    /// Merges one financial observation without mutating either input.
+    ///
+    /// Older observations are ignored. Equal-version conflicts throw.
+    /// Newer observations must still satisfy the lifecycle.
+    public static func applying(
+        _ incoming: TransferStatusSnapshot,
+        to current: TransferStatusSnapshot?
+    ) throws -> TransferStatusSnapshot {
+        let event: TransferEvent
+
+        switch incoming.state {
+        case .accepted:
+            event = .serverAccepted
+        case .settled:
+            event = .serverSettled
+        case .rejected:
+            event = .serverRejected
+        case .created, .submitting, .unknown:
+            throw StatusUpdateError.nonAuthoritativeState
+        }
+
+        if let current, let currentVersion = current.version {
+            guard let incomingVersion = incoming.version else {
+                throw StatusUpdateError.missingVersion
+            }
+
+            if incomingVersion < currentVersion {
+                return current
+            }
+
+            if incomingVersion == currentVersion {
+                guard incoming.state == current.state else {
+                    throw StatusUpdateError.conflictingVersion(
+                        incomingVersion
+                    )
+                }
+
+                return current
+            }
+        }
+
+        let state = try transition(
+            from: current?.state ?? .unknown,
+            on: event
+        )
+
+        return TransferStatusSnapshot(
+            state: state,
+            version: incoming.version
+        )
     }
 }

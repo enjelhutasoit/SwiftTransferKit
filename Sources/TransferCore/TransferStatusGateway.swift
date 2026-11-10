@@ -3,6 +3,7 @@
 //
 
 import Foundation
+import TransferDomain
 
 public struct TransferStatusResponse: Equatable, Sendable {
     public enum Status: Equatable, Sendable {
@@ -23,14 +24,22 @@ public struct TransferStatusResponse: Equatable, Sendable {
     public let idempotencyKey: UUID
     public let status: Status
 
+    /// Server-issued revision for an authoritative financial status.
+    ///
+    /// Nil supports legacy adapters. The client must not fabricate a value.
+    /// Pending/not-found observations do not advance the financial revision.
+    public let version: TransferStatusVersion?
+
     public init(
         intentID: UUID,
         idempotencyKey: UUID,
-        status: Status
+        status: Status,
+        version: TransferStatusVersion? = nil
     ) {
         self.intentID = intentID
         self.idempotencyKey = idempotencyKey
         self.status = status
+        self.version = version
     }
 }
 
