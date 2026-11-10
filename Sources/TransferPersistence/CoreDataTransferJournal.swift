@@ -7,7 +7,7 @@ import Foundation
 import TransferCore
 import TransferDomain
 
-public actor CoreDataTransferJournal: TransferJournal {
+public actor CoreDataTransferJournal: TransferRecoveryJournal {
     private let controller: TransferPersistenceController
 
     public init(storeURL: URL) throws {
@@ -74,6 +74,21 @@ public actor CoreDataTransferJournal: TransferJournal {
                 in: context
             )
             return try record?.value()
+        }
+    }
+
+    public func allEntries() async throws -> [JournaledTransfer] {
+        try await controller.perform { context in
+            let request = NSFetchRequest<TransferRecord>(
+                entityName: TransferRecord.entityName
+            )
+            let records = try context.fetch(request)
+            let entries = try records.map { try $0.value() }
+
+            // Stable traversal only; UUID ordering has no financial meaning.
+            return entries.sorted {
+                $0.intent.id.uuidString < $1.intent.id.uuidString
+            }
         }
     }
 
