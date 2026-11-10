@@ -24,6 +24,10 @@ let package = Package(
             dependencies: ["TransferDomain"]
         ),
         .testTarget(
+            name: "TransferCoreTests",
+            dependencies: ["TransferCore", "TransferDomain"]
+        ),
+        .testTarget(
             name: "TransferPersistenceTests",
             dependencies: ["TransferPersistence", "TransferCore", "TransferDomain"]
         ),
