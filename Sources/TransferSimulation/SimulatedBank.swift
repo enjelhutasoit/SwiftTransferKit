@@ -9,7 +9,7 @@ import TransferCore
 ///
 /// Separate instances can share one store to model independent clients
 /// reaching the same simulated uniqueness boundary.
-public actor SimulatedBank: TransferGateway {
+public actor SimulatedBank: TransferGateway, TransferStatusGateway {
     private let store: SimulatedTransferStore
     private var faults: [UUID: SimulatedBankFault]
 
@@ -43,5 +43,32 @@ public actor SimulatedBank: TransferGateway {
         }
 
         return result
+    }
+
+    public func status(
+        for intentID: UUID,
+        idempotencyKey: UUID
+    ) async throws -> TransferStatusResponse {
+        let transfer = await store.acceptedTransfer(
+            for: idempotencyKey
+        )
+
+        guard let transfer else {
+            return TransferStatusResponse(
+                intentID: intentID,
+                idempotencyKey: idempotencyKey,
+                status: .notFound
+            )
+        }
+
+        guard transfer.intent.id == intentID else {
+            throw SimulatedBankError.intentConflict
+        }
+
+        return TransferStatusResponse(
+            intentID: transfer.intent.id,
+            idempotencyKey: transfer.idempotencyKey,
+            status: .accepted
+        )
     }
 }
