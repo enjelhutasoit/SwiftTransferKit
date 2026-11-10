@@ -4,15 +4,26 @@ import PackageDescription
 
 let package = Package(
     name: "SwiftTransferKit",
-    platforms: [.iOS(.v17)],
+    platforms: [
+        .iOS(.v17),
+        .macOS(.v12),
+    ],
     products: [
         .library(name: "TransferDomain", targets: ["TransferDomain"]),
+        .library(name: "TransferCore", targets: ["TransferCore"]),
+        .library(name: "TransferPersistence", targets: ["TransferPersistence"]),
     ],
     targets: [
         .target(name: "TransferDomain"),
+        .target(name: "TransferCore", dependencies: ["TransferDomain"]),
+        .target(name: "TransferPersistence", dependencies: ["TransferCore", "TransferDomain"]),
         .testTarget(
             name: "TransferDomainTests",
             dependencies: ["TransferDomain"]
+        ),
+        .testTarget(
+            name: "TransferPersistenceTests",
+            dependencies: ["TransferPersistence", "TransferCore", "TransferDomain"]
         ),
     ],
     swiftLanguageModes: [.v6]
