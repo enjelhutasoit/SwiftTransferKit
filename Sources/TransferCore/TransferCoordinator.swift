@@ -1,0 +1,166 @@
+//
+// Copyright (c) 2026 Enjel Hutasoit
+//
+
+import Foundation
+import TransferDomain
+
+/// Coordinates submissions within one process and one coordinator instance.
+///
+/// Callers must reuse the same intent identity for the same business action.
+/// Backend idempotency remains required across instances and devices.
+public actor TransferCoordinator {
+    private struct TrackedTransfer {
+        let intent: TransferIntent
+        var state: TransferState
+    }
+
+    private let journal: any TransferJournal
+    private let gateway: any TransferGateway
+    private let makeIdempotencyKey: @Sendable () -> UUID
+
+    private var tracked: [UUID: TrackedTransfer] = [:]
+
+    public init(
+        journal: any TransferJournal,
+        gateway: any TransferGateway,
+        makeIdempotencyKey: @escaping @Sendable () -> UUID = { UUID() }
+    ) {
+        self.journal = journal
+        self.gateway = gateway
+        self.makeIdempotencyKey = makeIdempotencyKey
+    }
+
+    /// Submits a new intent after persistence succeeds.
+    ///
+    /// An identical concurrent call returns `.submitting` immediately.
+    /// Repeated calls return the current local state without resubmitting.
+    /// Gateway errors preserve `.unknown`; they do not establish rejection.
+    public func submit(
+        _ intent: TransferIntent
+    ) async throws -> TransferState {
+        if let existing = tracked[intent.id] {
+            guard existing.intent == intent else {
+                throw TransferOperationError.intentConflict
+            }
+
+            return existing.state
+        }
+
+        let submittingState = try TransferStateMachine.transition(
+            from: .created,
+            on: .submissionStarted
+        )
+
+        // Reserve before the first suspension point.
+        tracked[intent.id] = TrackedTransfer(
+            intent: intent,
+            state: submittingState
+        )
+
+        let prepared: JournaledTransfer?
+
+        do {
+            prepared = try await prepareSubmission(for: intent)
+        } catch {
+            // The gateway has not been called by this attempt.
+            // A later attempt must check the journal again.
+            tracked.removeValue(forKey: intent.id)
+            throw error
+        }
+
+        guard let prepared else {
+            tracked[intent.id]?.state = .unknown
+            return .unknown
+        }
+
+        let result: TransferSubmissionResult
+
+        do {
+            result = try await gateway.submit(prepared)
+        } catch {
+            // Transport errors, including cancellation, do not prove rejection.
+            tracked[intent.id]?.state = .unknown
+            return .unknown
+        }
+
+        let event: TransferEvent
+
+        switch result {
+        case .accepted:
+            event = .serverAccepted
+
+        case .rejected:
+            event = .serverRejected
+        }
+
+        let finalState = try TransferStateMachine.transition(
+            from: submittingState,
+            on: event
+        )
+        tracked[intent.id]?.state = finalState
+        return finalState
+    }
+
+    /// Returns only the state observed by this coordinator.
+    ///
+    /// A nil result does not prove the intent is absent from durable storage.
+    public func state(for intentID: UUID) -> TransferState? {
+        tracked[intentID]?.state
+    }
+
+    private func prepareSubmission(
+        for intent: TransferIntent
+    ) async throws -> JournaledTransfer? {
+        let existingEntry: JournaledTransfer?
+
+        do {
+            existingEntry = try await journal.entry(for: intent.id)
+        } catch {
+            throw mapJournalError(error)
+        }
+
+        guard try TransferSubmissionPolicy.shouldSubmit(
+            intent,
+            existingEntry: existingEntry
+        ) else {
+            return nil
+        }
+
+        do {
+            let entry = try await journal.record(
+                intent,
+                idempotencyKey: makeIdempotencyKey()
+            )
+
+            guard entry.intent == intent else {
+                throw TransferJournalError.corruptRecord
+            }
+
+            // The journal may return an already stored key.
+            // Its returned entry is the submission source of truth.
+            return entry
+        } catch {
+            throw mapJournalError(error)
+        }
+    }
+
+    private func mapJournalError(
+        _ error: any Error
+    ) -> TransferOperationError {
+        guard let journalError = error as? TransferJournalError else {
+            return .persistenceFailure
+        }
+
+        switch journalError {
+        case .intentConflict:
+            return .intentConflict
+
+        case .idempotencyKeyConflict:
+            return .idempotencyKeyConflict
+
+        case .storageFailure, .corruptRecord:
+            return .persistenceFailure
+        }
+    }
+}
