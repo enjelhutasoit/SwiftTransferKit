@@ -14,6 +14,7 @@ let package = Package(
         .library(name: "TransferPersistence", targets: ["TransferPersistence"]),
         .library(name: "TransferNetworking", targets: ["TransferNetworking"]),
         .library(name: "TransferSimulation", targets: ["TransferSimulation"]),
+        .library(name: "TransferSecurity", targets: ["TransferSecurity"]),
     ],
     targets: [
         .target(name: "TransferDomain"),
@@ -21,6 +22,7 @@ let package = Package(
         .target(name: "TransferPersistence", dependencies: ["TransferCore", "TransferDomain"]),
         .target(name: "TransferNetworking", dependencies: ["TransferCore", "TransferDomain"]),
         .target(name: "TransferSimulation", dependencies: ["TransferCore", "TransferDomain"]),
+        .target(name: "TransferSecurity", dependencies: ["TransferCore", "TransferDomain"]),
         .testTarget(
             name: "TransferDomainTests",
             dependencies: ["TransferDomain"]
@@ -46,6 +48,15 @@ let package = Package(
             name: "TransferSimulationTests",
             dependencies: [
                 "TransferSimulation",
+                "TransferPersistence",
+                "TransferCore",
+                "TransferDomain",
+            ]
+        ),
+        .testTarget(
+            name: "TransferSecurityTests",
+            dependencies: [
+                "TransferSecurity",
                 "TransferPersistence",
                 "TransferCore",
                 "TransferDomain",
