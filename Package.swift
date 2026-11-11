@@ -16,6 +16,9 @@ let package = Package(
         .library(name: "TransferSimulation", targets: ["TransferSimulation"]),
         .library(name: "TransferSecurity", targets: ["TransferSecurity"]),
         .library(name: "TransferObservability", targets: ["TransferObservability"]),
+
+        // Example composition only; not part of the production SDK surface.
+        .library(name: "TransferDemoSupport", targets: ["TransferDemoSupport"]),
     ],
     targets: [
         .target(name: "TransferDomain"),
@@ -25,6 +28,17 @@ let package = Package(
         .target(name: "TransferSimulation", dependencies: ["TransferCore", "TransferDomain"]),
         .target(name: "TransferSecurity", dependencies: ["TransferCore", "TransferDomain"]),
         .target(name: "TransferObservability", dependencies: ["TransferCore"]),
+        .target(
+            name: "TransferDemoSupport",
+            dependencies: [
+                "TransferCore",
+                "TransferDomain",
+                "TransferPersistence",
+                "TransferSecurity",
+                "TransferSimulation",
+            ],
+            path: "Examples/BusinessTransferDemo/Infrastructure"
+        ),
         .testTarget(
             name: "TransferDomainTests",
             dependencies: ["TransferDomain"]
@@ -62,6 +76,16 @@ let package = Package(
                 "TransferPersistence",
                 "TransferCore",
                 "TransferDomain",
+            ]
+        ),
+        .testTarget(
+            name: "TransferIntegrationTests",
+            dependencies: [
+                "TransferDemoSupport",
+                "TransferCore",
+                "TransferDomain",
+                "TransferPersistence",
+                "TransferSecurity",
             ]
         ),
     ],

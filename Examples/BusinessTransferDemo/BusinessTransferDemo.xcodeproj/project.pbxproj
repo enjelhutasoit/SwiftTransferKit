@@ -1,0 +1,422 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		EF40106E30A4430100ED5347 /* TransferStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF40106930A4430100ED5347 /* TransferStatusView.swift */; };
+		EF40106F30A4430100ED5347 /* TransferView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF40106A30A4430100ED5347 /* TransferView.swift */; };
+		EF40107030A4430100ED5347 /* TransferViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF40106B30A4430100ED5347 /* TransferViewModel.swift */; };
+		EF40107130A4430100ED5347 /* BusinessTransferDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF40106730A4430100ED5347 /* BusinessTransferDemoApp.swift */; };
+		EF40107430A4435700ED5347 /* TransferCore in Frameworks */ = {isa = PBXBuildFile; productRef = EF40107330A4435700ED5347 /* TransferCore */; };
+		EF40107630A4435700ED5347 /* TransferDemoSupport in Frameworks */ = {isa = PBXBuildFile; productRef = EF40107530A4435700ED5347 /* TransferDemoSupport */; };
+		EF40107830A4435700ED5347 /* TransferDomain in Frameworks */ = {isa = PBXBuildFile; productRef = EF40107730A4435700ED5347 /* TransferDomain */; };
+		EF40107A30A4435700ED5347 /* TransferObservability in Frameworks */ = {isa = PBXBuildFile; productRef = EF40107930A4435700ED5347 /* TransferObservability */; };
+		EF40107C30A4435700ED5347 /* TransferSecurity in Frameworks */ = {isa = PBXBuildFile; productRef = EF40107B30A4435700ED5347 /* TransferSecurity */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		EF40104630A43E3A00ED5347 /* BusinessTransferDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BusinessTransferDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EF40106730A4430100ED5347 /* BusinessTransferDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessTransferDemoApp.swift; sourceTree = "<group>"; };
+		EF40106930A4430100ED5347 /* TransferStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferStatusView.swift; sourceTree = "<group>"; };
+		EF40106A30A4430100ED5347 /* TransferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferView.swift; sourceTree = "<group>"; };
+		EF40106B30A4430100ED5347 /* TransferViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferViewModel.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		EF40104830A43E3A00ED5347 /* BusinessTransferDemo */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BusinessTransferDemo;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		EF40104330A43E3A00ED5347 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EF40107630A4435700ED5347 /* TransferDemoSupport in Frameworks */,
+				EF40107A30A4435700ED5347 /* TransferObservability in Frameworks */,
+				EF40107C30A4435700ED5347 /* TransferSecurity in Frameworks */,
+				EF40107830A4435700ED5347 /* TransferDomain in Frameworks */,
+				EF40107430A4435700ED5347 /* TransferCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		EF40103D30A43E3A00ED5347 = {
+			isa = PBXGroup;
+			children = (
+				EF40104830A43E3A00ED5347 /* BusinessTransferDemo */,
+				EF40104730A43E3A00ED5347 /* Products */,
+				EF40106830A4430100ED5347 /* App */,
+				EF40106D30A4430100ED5347 /* Features */,
+			);
+			sourceTree = "<group>";
+		};
+		EF40104730A43E3A00ED5347 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EF40104630A43E3A00ED5347 /* BusinessTransferDemo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		EF40106830A4430100ED5347 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				EF40106730A4430100ED5347 /* BusinessTransferDemoApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		EF40106C30A4430100ED5347 /* Transfers */ = {
+			isa = PBXGroup;
+			children = (
+				EF40106930A4430100ED5347 /* TransferStatusView.swift */,
+				EF40106A30A4430100ED5347 /* TransferView.swift */,
+				EF40106B30A4430100ED5347 /* TransferViewModel.swift */,
+			);
+			path = Transfers;
+			sourceTree = "<group>";
+		};
+		EF40106D30A4430100ED5347 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				EF40106C30A4430100ED5347 /* Transfers */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		EF40104530A43E3A00ED5347 /* BusinessTransferDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EF40105430A43E3F00ED5347 /* Build configuration list for PBXNativeTarget "BusinessTransferDemo" */;
+			buildPhases = (
+				EF40104230A43E3A00ED5347 /* Sources */,
+				EF40104330A43E3A00ED5347 /* Frameworks */,
+				EF40104430A43E3A00ED5347 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				EF40104830A43E3A00ED5347 /* BusinessTransferDemo */,
+			);
+			name = BusinessTransferDemo;
+			packageProductDependencies = (
+				EF40107330A4435700ED5347 /* TransferCore */,
+				EF40107530A4435700ED5347 /* TransferDemoSupport */,
+				EF40107730A4435700ED5347 /* TransferDomain */,
+				EF40107930A4435700ED5347 /* TransferObservability */,
+				EF40107B30A4435700ED5347 /* TransferSecurity */,
+			);
+			productName = BusinessTransferDemo;
+			productReference = EF40104630A43E3A00ED5347 /* BusinessTransferDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		EF40103E30A43E3A00ED5347 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					EF40104530A43E3A00ED5347 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+				};
+			};
+			buildConfigurationList = EF40104130A43E3A00ED5347 /* Build configuration list for PBXProject "BusinessTransferDemo" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = EF40103D30A43E3A00ED5347;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				EF40107230A4435700ED5347 /* XCLocalSwiftPackageReference "../../../SwiftTransferKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = EF40104730A43E3A00ED5347 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				EF40104530A43E3A00ED5347 /* BusinessTransferDemo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		EF40104430A43E3A00ED5347 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		EF40104230A43E3A00ED5347 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EF40106E30A4430100ED5347 /* TransferStatusView.swift in Sources */,
+				EF40106F30A4430100ED5347 /* TransferView.swift in Sources */,
+				EF40107030A4430100ED5347 /* TransferViewModel.swift in Sources */,
+				EF40107130A4430100ED5347 /* BusinessTransferDemoApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		EF40105230A43E3F00ED5347 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		EF40105330A43E3F00ED5347 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		EF40105530A43E3F00ED5347 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"BusinessTransferDemo/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Verify your identity before submitting a simulated transfer.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.enjelhutasoit.BusinessTransferDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		EF40105630A43E3F00ED5347 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"BusinessTransferDemo/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Verify your identity before submitting a simulated transfer.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.enjelhutasoit.BusinessTransferDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		EF40104130A43E3A00ED5347 /* Build configuration list for PBXProject "BusinessTransferDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EF40105230A43E3F00ED5347 /* Debug */,
+				EF40105330A43E3F00ED5347 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EF40105430A43E3F00ED5347 /* Build configuration list for PBXNativeTarget "BusinessTransferDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EF40105530A43E3F00ED5347 /* Debug */,
+				EF40105630A43E3F00ED5347 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		EF40107230A4435700ED5347 /* XCLocalSwiftPackageReference "../../../SwiftTransferKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../../SwiftTransferKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EF40107330A4435700ED5347 /* TransferCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TransferCore;
+		};
+		EF40107530A4435700ED5347 /* TransferDemoSupport */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TransferDemoSupport;
+		};
+		EF40107730A4435700ED5347 /* TransferDomain */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TransferDomain;
+		};
+		EF40107930A4435700ED5347 /* TransferObservability */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TransferObservability;
+		};
+		EF40107B30A4435700ED5347 /* TransferSecurity */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TransferSecurity;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = EF40103E30A43E3A00ED5347 /* Project object */;
+}
