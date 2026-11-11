@@ -1,0 +1,123 @@
+name: Swift verification
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, 'chore/17-release-v1.0.0']
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: swift-verification-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Xcode 16.2 / Intel / iOS 18.2
+    if: ${{ github.event.repository.private == false }}
+    runs-on: macos-15-intel
+    timeout-minutes: 60
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: SwiftTransferKit
+
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: SwiftTransferKit
+          persist-credentials: false
+
+      - name: Verify toolchain and source
+        run: |
+          set -euo pipefail
+          test -d "$DEVELOPER_DIR"
+          test "$(uname -m)" = x86_64
+          xcodebuild -version
+          xcrun swift --version
+          test "$(xcodebuild -version)" = $'Xcode 16.2\nBuild version 16C5032a'
+          swift_version="$(xcrun swift --version)"
+          [[ "$swift_version" == *'Apple Swift version 6.0.3 '* ]]
+          git rev-parse HEAD
+          git diff --check
+          xcrun swift package describe
+
+      - name: Run all macOS package tests
+        run: xcrun swift test
+
+      - name: Prepare iOS 18.2 Simulator
+        run: |
+          set -euo pipefail
+          has_runtime() {
+            xcrun simctl list runtimes --json | python3 -c '
+          import json, sys
+          runtimes = json.load(sys.stdin)["runtimes"]
+          available = any(
+              runtime.get("identifier") == "com.apple.CoreSimulator.SimRuntime.iOS-18-2"
+              and runtime.get("isAvailable", False)
+              for runtime in runtimes
+          )
+          sys.exit(0 if available else 1)
+          '
+          }
+          if ! has_runtime; then
+            xcodebuild -downloadPlatform iOS -buildVersion 18.2
+          fi
+          has_runtime
+          simulator_id="$(xcrun simctl create \
+            SwiftTransferKit-CI \
+            com.apple.CoreSimulator.SimDeviceType.iPhone-16 \
+            com.apple.CoreSimulator.SimRuntime.iOS-18-2)"
+          echo "TRANSFER_SIMULATOR_ID=$simulator_id" >> "$GITHUB_ENV"
+          xcrun simctl boot "$simulator_id"
+          xcrun simctl bootstatus "$simulator_id" -b
+
+      - name: Run all iOS package tests
+        run: |
+          xcodebuild \
+            -scheme SwiftTransferKit \
+            -destination "platform=iOS Simulator,id=$TRANSFER_SIMULATOR_ID" \
+            -parallel-testing-enabled NO \
+            -resultBundlePath "$RUNNER_TEMP/SwiftTransferKitTests.xcresult" \
+            test
+
+      - name: Build the demo in Release
+        run: |
+          xcodebuild \
+            -project Examples/BusinessTransferDemo/BusinessTransferDemo.xcodeproj \
+            -scheme BusinessTransferDemo \
+            -configuration Release \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/SwiftTransferKitDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Record successful verification
+        run: |
+          {
+            echo '## Verification completed'
+            echo "Source SHA: $(git rev-parse HEAD)"
+            echo '- Xcode 16.2 / Swift 6.0.3 / Intel'
+            echo '- All macOS package tests passed'
+            echo '- All iOS 18.2 package tests passed'
+            echo '- Release simulator demo build passed'
+            echo '- iOS 17 runtime and manual UI checks remain separate release gates'
+            echo '- No App Store deployment or automatic release publication'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Clean up the simulator
+        if: ${{ always() }}
+        run: |
+          if [[ -n "${TRANSFER_SIMULATOR_ID:-}" ]]; then
+            xcrun simctl shutdown "$TRANSFER_SIMULATOR_ID" || true
+            xcrun simctl delete "$TRANSFER_SIMULATOR_ID" || true
+          fi
