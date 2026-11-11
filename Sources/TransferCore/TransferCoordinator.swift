@@ -13,6 +13,7 @@ public actor TransferCoordinator {
     private struct TrackedTransfer {
         let intent: TransferIntent
         var state: TransferState
+        var failure: TransferFailure? = nil
     }
 
     private let journal: any TransferJournal
@@ -36,6 +37,7 @@ public actor TransferCoordinator {
     /// An identical concurrent call returns `.submitting` immediately.
     /// Repeated calls return the current local state without resubmitting.
     /// Gateway errors preserve `.unknown`; they do not establish rejection.
+    /// Operational causes can be read using `failure(for:)`.
     public func submit(
         _ intent: TransferIntent
     ) async throws -> TransferState {
@@ -71,6 +73,7 @@ public actor TransferCoordinator {
 
         guard let prepared else {
             tracked[intent.id]?.state = .unknown
+            tracked[intent.id]?.failure = .unknownOutcome
             return .unknown
         }
 
@@ -79,8 +82,9 @@ public actor TransferCoordinator {
         do {
             result = try await gateway.submit(prepared)
         } catch {
-            // Transport errors, including cancellation, do not prove rejection.
+            // Operational failure does not establish financial rejection.
             tracked[intent.id]?.state = .unknown
+            tracked[intent.id]?.failure = classifySubmissionFailure(error)
             return .unknown
         }
 
@@ -99,6 +103,7 @@ public actor TransferCoordinator {
             on: event
         )
         tracked[intent.id]?.state = finalState
+        tracked[intent.id]?.failure = nil
         return finalState
     }
 
@@ -107,6 +112,15 @@ public actor TransferCoordinator {
     /// A nil result does not prove the intent is absent from durable storage.
     public func state(for intentID: UUID) -> TransferState? {
         tracked[intentID]?.state
+    }
+
+    /// Returns the operational cause observed during submission.
+    ///
+    /// This value is local to this coordinator and is not persisted.
+    /// Nil does not imply acceptance, settlement, or absence of other errors.
+    /// Preparation errors continue to be thrown by submit(_:).
+    public func failure(for intentID: UUID) -> TransferFailure? {
+        tracked[intentID]?.failure
     }
 
     private func prepareSubmission(
@@ -143,6 +157,20 @@ public actor TransferCoordinator {
         } catch {
             throw mapJournalError(error)
         }
+    }
+
+    private func classifySubmissionFailure(
+        _ error: any Error
+    ) -> TransferFailure {
+        if let classified = error as? any TransferFailureProviding {
+            return classified.transferFailure
+        }
+
+        if error is CancellationError {
+            return .cancelled
+        }
+
+        return .unknownOutcome
     }
 
     private func mapJournalError(
