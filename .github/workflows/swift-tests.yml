@@ -1,0 +1,186 @@
+name: Swift verification
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: swift-verification-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Xcode 16.2 host / Xcode 16.4 iOS
+    if: ${{ github.event.repository.private == false }}
+    runs-on: macos-15-intel
+    timeout-minutes: 60
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: SwiftTransferKit
+
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+
+    steps:
+      - name: Check out source
+        # Pin the reviewed checkout implementation.
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: SwiftTransferKit
+          persist-credentials: false
+
+      - name: Verify toolchain and source
+        run: |
+          set -euo pipefail
+
+          if [[ ! -d "$DEVELOPER_DIR" ]]; then
+            echo "::error::Xcode 16.2 is not installed on this runner."
+            exit 1
+          fi
+
+          test "$(uname -m)" = x86_64
+          xcodebuild -version
+          xcrun swift --version
+          test "$(xcodebuild -version)" = $'Xcode 16.2\nBuild version 16C5032a'
+
+          swift_version="$(xcrun swift --version)"
+          [[ "$swift_version" == *'Apple Swift version 6.0.3 '* ]]
+
+          git rev-parse HEAD
+          git diff --check
+          xcrun swift package describe
+
+      - name: Run all macOS package tests
+        run: xcrun swift test
+
+      - name: Select preinstalled Xcode 16.4 and iOS 18.5
+        env:
+          DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+        run: |
+          set -euo pipefail
+
+          test -d "$DEVELOPER_DIR"
+          test "$(xcodebuild -version)" = $'Xcode 16.4\nBuild version 16F6'
+          xcodebuild -version
+          xcrun swift --version
+          test "$(xcrun --sdk iphonesimulator --show-sdk-version)" = 18.5
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
+
+          python3 <<'PY'
+          import json
+          import os
+          import subprocess
+
+          runtime_id = "com.apple.CoreSimulator.SimRuntime.iOS-18-5"
+
+          def inventory(kind):
+              output = subprocess.check_output(
+                  ["xcrun", "simctl", "list", kind, "--json"],
+                  text=True,
+              )
+              return json.loads(output)[kind]
+
+          runtimes = inventory("runtimes")
+          if not any(
+              r.get("identifier") == runtime_id and r.get("isAvailable", False)
+              for r in runtimes
+          ):
+              raise SystemExit(
+                  "::error::Preinstalled iOS 18.5 is unavailable. "
+                  "No runtime will be downloaded."
+              )
+
+          devices = [
+              d for d in inventory("devices").get(runtime_id, [])
+              if d.get("isAvailable", False) and d["name"].startswith("iPhone")
+          ]
+          if not devices:
+              raise SystemExit(
+                  "::error::No existing iPhone simulator for iOS 18.5. "
+                  "No device or runtime will be installed."
+              )
+
+          device = sorted(
+              devices,
+              key=lambda d: (d["state"] != "Booted", d["name"], d["udid"]),
+          )[0]
+          booted = str(device["state"] == "Booted").lower()
+
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as output:
+              output.write(f"TRANSFER_SIMULATOR_ID={device['udid']}\n")
+              output.write("TRANSFER_RUNTIME_VERSION=18.5\n")
+              output.write(f"TRANSFER_SIMULATOR_ALREADY_BOOTED={booted}\n")
+
+          print(f"Selected existing device: {device['name']} ({device['udid']})")
+          print("Runtime: iOS 18.5; no additional runtime download.")
+          PY
+
+      - name: Boot the selected simulator
+        run: |
+          set -euo pipefail
+
+          if [[ "$TRANSFER_SIMULATOR_ALREADY_BOOTED" != true ]]; then
+            xcrun simctl boot "$TRANSFER_SIMULATOR_ID"
+          fi
+
+          xcrun simctl bootstatus "$TRANSFER_SIMULATOR_ID" -b
+
+      - name: Run all iOS package tests
+        run: |
+          set -euo pipefail
+
+          xcodebuild -list
+
+          xcodebuild \
+            -scheme SwiftTransferKit-Package \
+            -destination "platform=iOS Simulator,id=$TRANSFER_SIMULATOR_ID" \
+            -parallel-testing-enabled NO \
+            -resultBundlePath "$RUNNER_TEMP/SwiftTransferKitTests.xcresult" \
+            test
+
+      - name: Build the demo in Release
+        run: |
+          set -euo pipefail
+
+          xcodebuild \
+            -project Examples/BusinessTransferDemo/BusinessTransferDemo.xcodeproj \
+            -scheme BusinessTransferDemo \
+            -configuration Release \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/SwiftTransferKitDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Record successful verification
+        run: |
+          {
+            echo '## Verification completed'
+            echo "Source SHA: $(git rev-parse HEAD)"
+            echo '- Host tests: Xcode 16.2 / Swift 6.0.3 / Intel'
+            echo '- iOS tests and demo build: preinstalled Xcode 16.4 / Swift 6 language mode'
+            echo "- Executed iOS runtime: $TRANSFER_RUNTIME_VERSION"
+            echo '- All macOS package tests passed'
+            echo '- All selected iOS Simulator package tests passed'
+            echo '- Release simulator demo build passed'
+            echo '- No additional simulator runtime was downloaded'
+            echo '- Xcode 16.2 iOS execution remains a local verification gate'
+            echo '- Other runtime versions remain unverified'
+            echo '- Manual demo checks remain a separate release gate'
+            echo '- No App Store deployment or automatic release publication'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Shut down the simulator started by this job
+        if: ${{ always() }}
+        run: |
+          if [[ -n "${TRANSFER_SIMULATOR_ID:-}" ]] &&
+             [[ "${TRANSFER_SIMULATOR_ALREADY_BOOTED:-true}" == false ]]; then
+            xcrun simctl shutdown "$TRANSFER_SIMULATOR_ID" || true
+          fi
