@@ -86,6 +86,7 @@ let package = Package(
                 "TransferDomain",
                 "TransferPersistence",
                 "TransferSecurity",
+                "TransferSimulation",
             ]
         ),
     ],
