@@ -12,12 +12,15 @@ import TransferDomain
 public actor TransferCoordinator {
     private struct TrackedTransfer {
         let intent: TransferIntent
+        let correlationID: UUID
         var state: TransferState
         var failure: TransferFailure? = nil
     }
 
     private let journal: any TransferJournal
     private let gateway: any TransferGateway
+    private let diagnostics: any TransferDiagnostics
+    private let makeCorrelationID: @Sendable () -> UUID
     private let makeIdempotencyKey: @Sendable () -> UUID
 
     private var tracked: [UUID: TrackedTransfer] = [:]
@@ -25,10 +28,14 @@ public actor TransferCoordinator {
     public init(
         journal: any TransferJournal,
         gateway: any TransferGateway,
+        diagnostics: any TransferDiagnostics = NoOpTransferDiagnostics(),
+        makeCorrelationID: @escaping @Sendable () -> UUID = { UUID() },
         makeIdempotencyKey: @escaping @Sendable () -> UUID = { UUID() }
     ) {
         self.journal = journal
         self.gateway = gateway
+        self.diagnostics = diagnostics
+        self.makeCorrelationID = makeCorrelationID
         self.makeIdempotencyKey = makeIdempotencyKey
     }
 
@@ -43,9 +50,17 @@ public actor TransferCoordinator {
     ) async throws -> TransferState {
         if let existing = tracked[intent.id] {
             guard existing.intent == intent else {
+                emit(
+                    .intentConflict,
+                    correlationID: existing.correlationID
+                )
                 throw TransferOperationError.intentConflict
             }
 
+            emit(
+                .submissionReused,
+                correlationID: existing.correlationID
+            )
             return existing.state
         }
 
@@ -53,12 +68,15 @@ public actor TransferCoordinator {
             from: .created,
             on: .submissionStarted
         )
+        let correlationID = makeCorrelationID()
 
         // Reserve before the first suspension point.
         tracked[intent.id] = TrackedTransfer(
             intent: intent,
+            correlationID: correlationID,
             state: submittingState
         )
+        emit(.submissionStarted, correlationID: correlationID)
 
         let prepared: JournaledTransfer?
 
@@ -68,14 +86,18 @@ public actor TransferCoordinator {
             // The gateway has not been called by this attempt.
             // A later attempt must check the journal again.
             tracked.removeValue(forKey: intent.id)
+            emit(.preparationFailed, correlationID: correlationID)
             throw error
         }
 
         guard let prepared else {
             tracked[intent.id]?.state = .unknown
             tracked[intent.id]?.failure = .unknownOutcome
+            emit(.reconciliationRequired, correlationID: correlationID)
             return .unknown
         }
+
+        emit(.intentJournaled, correlationID: correlationID)
 
         let result: TransferSubmissionResult
 
@@ -85,17 +107,21 @@ public actor TransferCoordinator {
             // Operational failure does not establish financial rejection.
             tracked[intent.id]?.state = .unknown
             tracked[intent.id]?.failure = classifySubmissionFailure(error)
+            emit(.submissionUnresolved, correlationID: correlationID)
             return .unknown
         }
 
         let event: TransferEvent
+        let diagnosticName: TransferDiagnosticEvent.Name
 
         switch result {
         case .accepted:
             event = .serverAccepted
+            diagnosticName = .submissionAccepted
 
         case .rejected:
             event = .serverRejected
+            diagnosticName = .submissionRejected
         }
 
         let finalState = try TransferStateMachine.transition(
@@ -104,6 +130,7 @@ public actor TransferCoordinator {
         )
         tracked[intent.id]?.state = finalState
         tracked[intent.id]?.failure = nil
+        emit(diagnosticName, correlationID: correlationID)
         return finalState
     }
 
@@ -190,5 +217,19 @@ public actor TransferCoordinator {
         case .storageFailure, .corruptRecord:
             return .persistenceFailure
         }
+    }
+
+    private func emit(
+        _ name: TransferDiagnosticEvent.Name,
+        correlationID: UUID
+    ) {
+        let event = TransferDiagnosticEvent(
+            name: name,
+            correlationID: correlationID
+        )
+
+        // Diagnostics must not replace a business result or error.
+        // Do not recursively log sink failures.
+        try? diagnostics.record(event)
     }
 }
