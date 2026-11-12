@@ -10,38 +10,87 @@ struct TransferStatusView: View {
     let state: TransferState?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(presentation.title)
-                .font(.headline)
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: presentation.symbol)
+                .font(.title2)
+                .foregroundStyle(presentation.color)
+                .accessibilityHidden(true)
 
-            Text(presentation.detail)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(presentation.title)
+                    .font(.headline)
+
+                Text(presentation.detail)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
         }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
     }
 
-    private var presentation: (title: String, detail: String) {
+    private var presentation: (
+        title: String,
+        detail: String,
+        symbol: String,
+        color: Color
+    ) {
         switch state {
         case .none:
-            return ("Not submitted", "Approval and submission are separate steps.")
+            return (
+                "Not submitted",
+                "Approval and submission are separate steps.",
+                "doc.text",
+                .secondary
+            )
 
         case .some(.created):
-            return ("Created", "No backend acceptance has been confirmed.")
+            return (
+                "Created",
+                "No bank acceptance has been confirmed.",
+                "doc.badge.plus",
+                .secondary
+            )
 
         case .some(.submitting):
-            return ("Submitting", "Waiting for a submission result.")
+            return (
+                "Submitting",
+                "Waiting for the submission result.",
+                "arrow.up.circle",
+                DemoTheme.accent
+            )
 
         case .some(.unknown):
-            return ("Outcome unknown", "Check authoritative status before taking further action.")
+            return (
+                "Outcome unknown",
+                "Check bank status. Do not submit a replacement transfer.",
+                "questionmark.circle",
+                DemoTheme.accent
+            )
 
         case .some(.accepted):
-            return ("Accepted — processing", "Acceptance does not mean settlement.")
+            return (
+                "Accepted · Processing",
+                "The simulated bank accepted the transfer. Settlement is pending.",
+                "clock",
+                DemoTheme.accent
+            )
 
         case .some(.settled):
-            return ("Settled", "Settlement was confirmed by the simulated bank.")
+            return (
+                "Transfer settled",
+                "Settlement was confirmed by the simulated bank.",
+                "checkmark.circle.fill",
+                DemoTheme.success
+            )
 
         case .some(.rejected):
-            return ("Transfer rejected", "The simulated bank confirmed rejection.")
+            return (
+                "Transfer rejected",
+                "The simulated bank confirmed rejection.",
+                "xmark.circle.fill",
+                DemoTheme.destructive
+            )
         }
     }
 }

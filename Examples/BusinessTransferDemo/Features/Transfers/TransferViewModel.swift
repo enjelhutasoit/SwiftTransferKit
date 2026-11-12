@@ -11,7 +11,7 @@ import TransferDomain
 @MainActor
 final class TransferViewModel: ObservableObject {
     @Published var amountText = "100000"
-    @Published var loseResponse = true
+    @Published var loseResponse = false
     @Published var useBiometrics = false
 
     @Published private(set) var approvalState: ApprovalState?
